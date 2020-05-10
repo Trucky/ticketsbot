@@ -9,6 +9,10 @@ class TicketRepository {
     return model.find().exec();
   }
 
+  static async getByTicketNumber(guild, number) {
+    return model.findOne({ guild: guild, number: number }).exec();
+  }
+
   static async getAllOpen() {
     return model.find({ status: true }).exec();
   }
@@ -17,13 +21,15 @@ class TicketRepository {
     return model.countDocuments({ guild: guild }).exec();
   }
 
-  static async close(guild, channel) {
-    return model
+  static async close(guild, channel, user) {
+    await model
       .updateOne(
         { guild: guild, channel: channel },
-        { $set: { status: false } }
+        { $set: { status: false, closedBy: user } }
       )
       .exec();
+
+      return await model.findOne({ guild: guild, channel: channel }).exec();
   }
 
   static async getByChannel(guild, channel) {
@@ -40,6 +46,7 @@ class TicketRepository {
               author: message.author.id,
               authorName: message.author.username,
               content: message.content,
+              timestamp: new Date()
             },
           },
         }

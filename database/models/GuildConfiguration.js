@@ -9,6 +9,19 @@ var modelSchema = new Schema({
   ticketsChannelCategory: String,
   helpChannelMessage: String,
   helpChannelEmbedTitle: String,
+  supportLogChannel: String,
+  rolesPermissions: [
+    {
+      role: String,
+      id: String,
+    },
+  ],
+  usersPermissions: [
+    {
+      role: String,
+      id: String,
+    }
+  ]
 });
 
 module.exports = mongoose.model("GuildConfiguration", modelSchema);

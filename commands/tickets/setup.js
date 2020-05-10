@@ -10,6 +10,7 @@ module.exports = class SetupCommand extends commando.Command {
       memberName: "setup",
       description: "Setup the bot",
       examples: ["t?setup" ],
+      userPermissions: ['ADMINISTRATOR', 'MANAGE_GUILD'],
       guildOnly: true,
     });
   }

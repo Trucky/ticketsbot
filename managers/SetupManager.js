@@ -14,6 +14,10 @@ const setupMessages = [
   },
   { type: "reactionEmoticon", text: "Set the reaction emoticon" },
   {
+    type: "supportLogChannel",
+    text: "Set the channel where support log will be sent",
+  },
+  {
     type: "ticketChannelCategory",
     text: "Set the channel category where tickets channel will be created",
   },
@@ -31,6 +35,7 @@ class SetupManager {
       ticketsChannelCategory: "",
       helpChannelMessage: "",
       helpChannelEmbedTitle: "",
+      supportLogChannel: ""
     };
 
     const collector = new Discord.MessageCollector(
@@ -95,6 +100,16 @@ class SetupManager {
           collectedMessage.channel.send(setupMessages[currentResponse].text);
 
           configuration.reactionEmoticon = collectedMessage.content;
+
+          break;
+        case "supportLogChannel":
+          currentResponse++;
+
+          collectedMessage.react("✅");
+
+          collectedMessage.channel.send(setupMessages[currentResponse].text);
+
+          configuration.supportLogChannel = collectedMessage.mentions.channels.array()[0].id;
 
           break;
         case "ticketChannelCategory":

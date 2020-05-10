@@ -13,8 +13,10 @@ var modelSchema = new Schema({
   logs: [{
       author: String,
       authorName: String,
-      content: String
-  }]
+      content: String,
+      timestamp: Date
+  }],
+  closedBy: String
 });
 
 module.exports = mongoose.model("Ticket", modelSchema);

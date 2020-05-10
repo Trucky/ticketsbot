@@ -1,35 +1,68 @@
 const Discord = require("discord.js");
 const TicketRepository = require("../database/repositories/TicketRepository");
+const GuildConfigurationRepository = require("../database/repositories/GuildConfigurationRepository");
 
 class TicketChannelManager {
   constructor() {}
 
-  async openTicket(configuration, user, guild) {
+  async openTicket(user, guild) {
+    var configuration = await GuildConfigurationRepository.get(guild.id);
+
     var allTicketsCount = await TicketRepository.countAll(guild.id);
     var nextTicket = allTicketsCount + 1;
 
     const everyone = guild.roles.cache.find((r) => r.name == "@everyone");
 
+    var permissionOverwrites = [
+      {
+        id: user.id,
+        allow: [
+          "SEND_MESSAGES",
+          "VIEW_CHANNEL",
+          "ADD_REACTIONS",
+          "ATTACH_FILES",
+          "EMBED_LINKS",
+        ],
+      },
+      {
+        id: everyone.id,
+        deny: ["VIEW_CHANNEL"],
+      },
+    ];
+
+    configuration.usersPermissions.forEach((m) => {
+      permissionOverwrites.push({
+        id: m.id,
+        allow: [
+          "MANAGE_CHANNELS",
+          "SEND_MESSAGES",
+          "VIEW_CHANNEL",
+          "ADD_REACTIONS",
+          "ATTACH_FILES",
+          "EMBED_LINKS",
+        ],
+      });
+    });
+
+    configuration.rolesPermissions.forEach((m) => {
+      permissionOverwrites.push({
+        id: m.id,
+        allow: [
+          "MANAGE_CHANNELS",
+          "SEND_MESSAGES",
+          "VIEW_CHANNEL",
+          "ADD_REACTIONS",
+          "ATTACH_FILES",
+          "EMBED_LINKS",
+        ],
+      });
+    });
+
     var channel = await guild.channels.create("#ticket-" + nextTicket, {
       type: "text",
       topic: "Ticket #" + nextTicket + " created by " + user.name,
       parent: configuration.ticketsChannelCategory,
-      permissionOverwrites: [
-        {
-          id: user.id,
-          allow: [
-            "SEND_MESSAGES",
-            "VIEW_CHANNEL",
-            "ADD_REACTIONS",
-            "ATTACH_FILES",
-            "EMBED_LINKS",
-          ],
-        },
-        {
-          id: everyone.id,
-          deny: ["VIEW_CHANNEL"],
-        },
-      ],
+      permissionOverwrites: permissionOverwrites,
     });
 
     var initialEmbed = new Discord.MessageEmbed({
@@ -39,7 +72,7 @@ class TicketChannelManager {
 
     var initialMessage = await channel.send(initialEmbed);
 
-    await TicketRepository.create({
+    var ticket = await TicketRepository.create({
       guild: guild.id,
       author: user.id,
       channel: channel.id,
@@ -51,6 +84,8 @@ class TicketChannelManager {
     });
 
     await initialMessage.react("🔒");
+
+    await this.sendOpeningTicketSupportLog(initialMessage.guild, ticket);
 
     this.waitForReactions(initialMessage);
 
@@ -68,19 +103,23 @@ class TicketChannelManager {
 
           reactionCollector.stop();
 
-          this.closeTicket(message);
+          this.closeTicket(message, u);
         }
       });
     });
   }
 
-  async closeTicket(message) {
+  async closeTicket(message, user) {
     var ticket = await TicketRepository.getByChannel(
       message.guild.id,
       message.channel.id
     );
 
-    await TicketRepository.close(message.guild.id, message.channel.id);
+    ticket = await TicketRepository.close(
+      message.guild.id,
+      message.channel.id,
+      user.username
+    );
 
     var user = message.client.users.resolve(ticket.author);
 
@@ -95,7 +134,34 @@ class TicketChannelManager {
       );
     }
 
+    this.sendClosingTicketSupportLog(message.guild, ticket);
+
     await message.channel.delete();
+  }
+
+  async sendOpeningTicketSupportLog(guild, ticket) {
+    
+    var configuration = await GuildConfigurationRepository.get(guild.id);
+
+    var embed = new Discord.MessageEmbed();
+    embed.setTitle('Ticket #' + ticket.number + ' has been created');
+    embed.addField('Author', ticket.authorName);
+    embed.setTimestamp(new Date());
+    
+    await guild.channels.resolve(configuration.supportLogChannel).send(embed);
+  }
+
+  async sendClosingTicketSupportLog(guild, ticket) {
+    
+    var configuration = await GuildConfigurationRepository.get(guild.id);
+
+    var embed = new Discord.MessageEmbed();
+    embed.setTitle('Ticket #' + ticket.number + ' has been closed');
+    embed.addField('Author', ticket.authorName);
+    embed.addField('Closed by', ticket.closedBy);
+    embed.setTimestamp(new Date());
+    
+    await guild.channels.resolve(configuration.supportLogChannel).send(embed);
   }
 
   async recoverWaitForReactions(client) {
@@ -108,7 +174,6 @@ class TicketChannelManager {
         var channel = guild.channels.resolve(c.channel);
 
         if (channel) {
-
           this.waitForMessages(channel);
 
           var message = await channel.messages.fetch(c.bannerMessage, true);

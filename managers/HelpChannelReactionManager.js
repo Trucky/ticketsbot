@@ -40,7 +40,6 @@ class HelpChannelReactionManager {
 
           var ticketChannelManager = new TicketChannelManager();
           ticketChannelManager.openTicket(
-            configuration,
             u,
             r.message.guild
           );

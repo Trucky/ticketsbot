@@ -16,6 +16,6 @@ module.exports = class SetupCommand extends commando.Command {
 
   async run(msg, args) {
     var ticketChannelManager = new TicketChannelManager();
-    ticketChannelManager.closeTicket(msg);
+    ticketChannelManager.closeTicket(msg, msg.author);
   }
 };

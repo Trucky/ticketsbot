@@ -20,8 +20,7 @@ class TicketChannelManager {
           "SEND_MESSAGES",
           "VIEW_CHANNEL",
           "ADD_REACTIONS",
-          "ATTACH_FILES",
-          "EMBED_LINKS",
+          "ATTACH_FILES"
         ],
       },
       {
@@ -66,9 +65,17 @@ class TicketChannelManager {
     });
 
     var initialEmbed = new Discord.MessageEmbed({
-      title: "You have opened a new ticket.",
-      description: "A member of our team will be in touch shortly.",
+      title: "Welcome to the Trucky Help channel!",
+      description: "You have opened a new ticket.\nA member of our team will be in touch shortly.",
     });
+
+    initialEmbed.fields.push({ name: 'Opened by', value: `<@${user.id}>`})
+
+    initialEmbed.fields.push({ name: 'Knowledge Base', value: 'https://truckyapp.com/kb/'});
+
+    initialEmbed.fields.push({ name: 'Need support in your language?', value: 'Add your language flag as reaction to this message'});
+
+    initialEmbed.fields.push({ name: 'Rules', value: 'We offer support as best effort, please don\'t mention anyone from the staff, we\'ll get to you as soon as possible' });
 
     var initialMessage = await channel.send(initialEmbed);
 
@@ -87,6 +94,10 @@ class TicketChannelManager {
 
     await this.sendOpeningTicketSupportLog(initialMessage.guild, ticket);
 
+    var everyOneMessage = await channel.send('@everyone');
+    
+    await everyOneMessage.delete();
+    
     this.waitForReactions(initialMessage);
 
     this.waitForMessages(channel);

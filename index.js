@@ -18,6 +18,7 @@ mongoose
     const client = new Commando.Client({
       owner: process.env.OWNER_ID,
       commandPrefix: "t?",
+      disableEveryone: false
     });
 
     client.registry

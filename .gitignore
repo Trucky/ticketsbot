@@ -116,3 +116,4 @@ dist
 .pnp.*
 
 *.sqlite3
+ecosystem.config.js

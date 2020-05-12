@@ -1,0 +1,15 @@
+module.exports = {
+  apps : [{
+    name: 'ticketsbot',
+    instances: 1,
+    script: '/home/trucky/apps/ticketsbot/index.js',
+    log_date_format : "YYYY-MM-DD HH:mm Z",
+    watch: false,
+    merge_logs: true,
+    env: {
+      BOT_TOKEN: "YOUR_BOT_TOKEN",
+      BOT_OWNER: "YOUR_ID",
+      MONGODB_URI: "mongodb://XX:XX@XXX:XX/XX"
+    }
+  }],
+};

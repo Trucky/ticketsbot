@@ -112,9 +112,12 @@ class TicketChannelManager {
         if (u.id != r.client.user.id) {
           console.log(r);
 
-          reactionCollector.stop();
+          if (r.emoji.name == "🔒")
+          {
+            reactionCollector.stop();
 
-          this.closeTicket(message, u);
+            this.closeTicket(message, u);
+          }
         }
       });
     });

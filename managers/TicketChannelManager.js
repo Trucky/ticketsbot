@@ -20,7 +20,7 @@ class TicketChannelManager {
           "SEND_MESSAGES",
           "VIEW_CHANNEL",
           "ADD_REACTIONS",
-          "ATTACH_FILES"
+          "ATTACH_FILES",
         ],
       },
       {
@@ -66,16 +66,27 @@ class TicketChannelManager {
 
     var initialEmbed = new Discord.MessageEmbed({
       title: "Welcome to the Trucky Help channel!",
-      description: "You have opened a new ticket.\nA member of our team will be in touch shortly.",
+      description:
+        "You have opened a new ticket.\nA member of our team will be in touch shortly.",
     });
 
-    initialEmbed.fields.push({ name: 'Opened by', value: `<@${user.id}>`})
+    initialEmbed.fields.push({ name: "Opened by", value: `<@${user.id}>` });
 
-    initialEmbed.fields.push({ name: 'Knowledge Base', value: 'https://truckyapp.com/kb/'});
+    initialEmbed.fields.push({
+      name: "Knowledge Base",
+      value: "https://truckyapp.com/kb/",
+    });
 
-    initialEmbed.fields.push({ name: 'Need support in your language?', value: 'Add your language flag as reaction to this message'});
+    initialEmbed.fields.push({
+      name: "Need support in your language?",
+      value: "Add your language flag as reaction to this message",
+    });
 
-    initialEmbed.fields.push({ name: 'Rules', value: 'We offer support as best effort, please don\'t mention anyone from the staff, we\'ll get to you as soon as possible' });
+    initialEmbed.fields.push({
+      name: "Rules",
+      value:
+        "We offer support as best effort, please don't mention anyone from the staff, we'll get to you as soon as possible",
+    });
 
     var initialMessage = await channel.send(initialEmbed);
 
@@ -94,10 +105,10 @@ class TicketChannelManager {
 
     await this.sendOpeningTicketSupportLog(initialMessage.guild, ticket);
 
-    var everyOneMessage = await channel.send('@everyone');
-    
+    var everyOneMessage = await channel.send("@everyone");
+
     await everyOneMessage.delete();
-    
+
     this.waitForReactions(initialMessage);
 
     this.waitForMessages(channel);
@@ -112,8 +123,7 @@ class TicketChannelManager {
         if (u.id != r.client.user.id) {
           console.log(r);
 
-          if (r.emoji.name == "🔒")
-          {
+          if (r.emoji.name == "🔒") {
             reactionCollector.stop();
 
             this.closeTicket(message, u);
@@ -138,14 +148,18 @@ class TicketChannelManager {
     var user = message.client.users.resolve(ticket.author);
 
     if (user) {
-      var dmChannel = await user.createDM();
+      try {
+        var dmChannel = await user.createDM();
 
-      await dmChannel.send(
-        "Ticket #" +
-          ticket.number.toString() +
-          " has been closed. Thank you for contacting " +
-          message.guild.name
-      );
+        await dmChannel.send(
+          "Ticket #" +
+            ticket.number.toString() +
+            " has been closed. Thank you for contacting " +
+            message.guild.name
+        );
+      } catch (ex) {
+        console.error(ex);
+      }
     }
 
     this.sendClosingTicketSupportLog(message.guild, ticket);
@@ -154,27 +168,25 @@ class TicketChannelManager {
   }
 
   async sendOpeningTicketSupportLog(guild, ticket) {
-    
     var configuration = await GuildConfigurationRepository.get(guild.id);
 
     var embed = new Discord.MessageEmbed();
-    embed.setTitle('Ticket #' + ticket.number + ' has been created');
-    embed.addField('Author', ticket.authorName);
+    embed.setTitle("Ticket #" + ticket.number + " has been created");
+    embed.addField("Author", ticket.authorName);
     embed.setTimestamp(new Date());
-    
+
     await guild.channels.resolve(configuration.supportLogChannel).send(embed);
   }
 
   async sendClosingTicketSupportLog(guild, ticket) {
-    
     var configuration = await GuildConfigurationRepository.get(guild.id);
 
     var embed = new Discord.MessageEmbed();
-    embed.setTitle('Ticket #' + ticket.number + ' has been closed');
-    embed.addField('Author', ticket.authorName);
-    embed.addField('Closed by', ticket.closedBy);
+    embed.setTitle("Ticket #" + ticket.number + " has been closed");
+    embed.addField("Author", ticket.authorName);
+    embed.addField("Closed by", ticket.closedBy);
     embed.setTimestamp(new Date());
-    
+
     await guild.channels.resolve(configuration.supportLogChannel).send(embed);
   }
 

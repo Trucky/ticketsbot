@@ -41,11 +41,16 @@ module.exports = class SetupCommand extends commando.Command {
 
           if (ticket)
           {
-              var text = "```" + ticket.logs.map(m => {
-                  return moment(m.timestamp).format('DD-MM-YYYY hh:mm a') + " - " + m.authorName + " > " + m.content;
-              }).join('\n') + "```";
+              if (ticket.logs.length > 0)
+              {
+                var text = "```" + ticket.logs.map(m => {
+                    return moment(m.timestamp).format('DD-MM-YYYY hh:mm a') + " - " + m.authorName + " > " + m.content;
+                }).join('\n') + "```";
 
-              msg.channel.send(text);
+                msg.channel.send(text);
+              }
+              else
+                msg.channel.send('No messages sent for this ticket');
           }
           else
             msg.reply('No ticket found');

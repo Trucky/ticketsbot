@@ -5,23 +5,28 @@ const GuildConfigurationRepository = require("../database/repositories/GuildConf
 class HelpChannelReactionManager {
   constructor() {}
 
+  async fetchHelpChannelMessage(client, c) {
+    var message = null;
+
+    var guild = client.guilds.resolve(c.guild);
+
+    if (guild) {
+      var channel = guild.channels.resolve(c.helpChannel);
+
+      if (channel) {
+        message = await channel.messages.fetch(c.helpChannelMessage, true);
+      }
+    }
+
+    return message;
+  }
+
   async recoverWaitForReactions(client) {
     var guildConfigurations = await GuildConfigurationRepository.getAll();
 
     guildConfigurations.forEach(async (c) => {
-      var guild = client.guilds.resolve(c.guild);
-
-      if (guild) {
-        var channel = guild.channels.resolve(c.helpChannel);
-
-        if (channel) {
-          var message = await channel.messages.fetch(c.helpChannelMessage, true);
-
-          if (message) {
-            this.waitForReactions(c, message, client);
-          }
-        }
-      }
+      var message = await this.fetchHelpChannelMessage(client, c);
+      if (message) this.waitForReactions(c, message);
     });
   }
 
@@ -32,44 +37,72 @@ class HelpChannelReactionManager {
       filter
     );
     reactionCollector.on("collect", async (r) => {
-      r.users.cache.array().forEach(async u => {
+      r.users.cache.array().forEach(async (u) => {
+        if (u.id != r.client.user.id) {
+          
+          console.log(r.emoji.name);
 
-        if (u.id != r.client.user.id)
-        {
-          console.log(r);
-
-          var ticketChannelManager = new TicketChannelManager();
-          ticketChannelManager.openTicket(
-            u,
-            r.message.guild
+          // reload current guild configuration
+          configuration = await GuildConfigurationRepository.get(
+            r.message.guild.id
           );
 
-          await helpChannelReactionMessage.reactions.removeAll();
-          await helpChannelReactionMessage.react(configuration.reactionEmoticon);
+          await this.resetReactions(configuration, helpChannelReactionMessage);
+
+          var selectedTopic = configuration.topics.find(
+            (m) => m.reactionEmoji == r.emoji.name
+          );
+
+          if (selectedTopic) {
+            var ticketChannelManager = new TicketChannelManager();
+            ticketChannelManager.openTicket(u, r.message.guild, selectedTopic);
+          }
         }
       });
-    });    
+    });
   }
 
   async createHelpChannelMessage(configuration, message) {
     var helpChannel = message.guild.channels.cache.find(
       (m) => m.id == configuration.helpChannel
     );
+
+    var m = null;
+
+    if (configuration.helpChannelMessage) {
+      m = await helpChannel.messages.fetch(configuration.helpChannelMessage);
+    }
+
     var embed = new Discord.MessageEmbed({
       title: configuration.helpChannelEmbedTitle,
       description: configuration.helpChannelEmbedText,
     });
 
-    var m = await helpChannel.send(embed);
+    if (m) await m.edit(embed);
+    else {
+      m = await helpChannel.send(embed);
 
-    await GuildConfigurationRepository.updateHelpChannelMessage(
-      configuration,
-      m.id
-    );
+      await GuildConfigurationRepository.updateHelpChannelMessage(
+        configuration,
+        m.id
+      );
 
-    await m.react(configuration.reactionEmoticon);
+      this.waitForReactions(configuration, m);
+    }
 
-    this.waitForReactions(configuration, m);
+    await this.resetReactions(configuration, m);
+
+    //await m.react(configuration.reactionEmoticon);
+  }
+
+  async resetReactions(configuration, helpChannelReactionMessage) {
+    await helpChannelReactionMessage.reactions.removeAll();
+
+    for (var i = 0; i < configuration.topics.length; i++) {
+      var topic = configuration.topics[i];
+
+      await helpChannelReactionMessage.react(topic.reactionEmoji);
+    }
   }
 }
 

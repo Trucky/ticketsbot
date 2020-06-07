@@ -1,19 +1,17 @@
 const commando = require("discord.js-commando");
 const Discord = require("discord.js");
 const GuildConfigurationRepository = require("../../database/repositories/GuildConfigurationRepository");
+const HelpChannelReactionManager = require("../../managers/HelpChannelReactionManager");
 
 module.exports = class SetupCommand extends commando.Command {
   constructor(client) {
     super(client, {
-      name: "role",
+      name: "topic",
       group: "tickets",
-      memberName: "role",
-      description: "Add permission to group",
-      examples: [
-        "t?role add support @role",
-        "t?role add admin @role",
-        "t?role remove admin @role",
-      ],
+      memberName: "topic",
+      description: "Add topics",
+      examples: ["t?topic"],
+      userPermissions: ["ADMINISTRATOR", "MANAGE_GUILD"],
       guildOnly: true,
       args: [
         {
@@ -23,30 +21,24 @@ module.exports = class SetupCommand extends commando.Command {
           oneOf: ["add", "remove"],
         },
         {
-          key: "type",
-          prompt: "Permission type (support or admin)",
+          key: "emojii",
+          prompt: "Emojii to add or remove",
           type: "string",
-          oneOf: ["support", "admin"],
         },
         {
-          key: "role",
-          prompt: "Which role?",
-          type: "role",
-        },
-        {
-          key: "topicEmojii",
-          prompt: "Which topic emojii this role must reply to?",
+          key: "topic",
+          prompt: "Topic description",
           type: "string",
         },
       ],
     });
   }
 
-  async run(msg, { type, action, role, topicEmojii }) {
+  async run(msg, { action, emojii, topic }) {
     if (
       msg.member.hasPermission("ADMINISTRATOR") ||
       msg.member.hasPermission("MANAGE_GUILD") ||
-      await GuildConfigurationRepository.isAdmin(msg)
+      (await GuildConfigurationRepository.isAdmin(msg))
     ) {
       var guildConfiguration = await GuildConfigurationRepository.get(
         msg.guild.id
@@ -54,16 +46,25 @@ module.exports = class SetupCommand extends commando.Command {
 
       if (guildConfiguration) {
         if (action == "add") {
-          await GuildConfigurationRepository.addRolePermission(
-            msg.guild.id,
-            type,
-            role.id,
-            topicEmojii
+          await GuildConfigurationRepository.addTopic(
+            msg.channel.guild.id,
+            emojii,
+            topic
           );
+
+          var helpChannelMessage = await new HelpChannelReactionManager().fetchHelpChannelMessage(
+            msg.client,
+            guildConfiguration
+          );
+
+          if (helpChannelMessage) {
+            await helpChannelMessage.react(emojii);
+          }
 
           msg.react("✅");
         }
-      } else msg.reply("This guild is not configured yet. Please run `t?setup`");
+      } else
+        msg.reply("This guild is not configured yet. Please run `t?setup`");
     } else msg.reply("No permissions to perform this command");
   }
 };

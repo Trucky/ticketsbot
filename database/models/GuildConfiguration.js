@@ -14,14 +14,22 @@ var modelSchema = new Schema({
     {
       role: String,
       id: String,
+      topicEmojii: String
     },
   ],
   usersPermissions: [
     {
       role: String,
       id: String,
-    }
-  ]
+      topicEmojii: String
+    },
+  ],
+  topics: [
+    {
+      reactionEmoji: String,
+      topicName: String
+    },
+  ],
 });
 
 module.exports = mongoose.model("GuildConfiguration", modelSchema);

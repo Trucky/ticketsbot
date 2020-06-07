@@ -12,7 +12,7 @@ const setupMessages = [
     type: "helpChannelEmbedText",
     text: "Set the help channel message embed text",
   },
-  { type: "reactionEmoticon", text: "Set the reaction emoticon" },
+  //{ type: "reactionEmoticon", text: "Set the reaction emoticon" },
   {
     type: "supportLogChannel",
     text: "Set the channel where support log will be sent",
@@ -27,16 +27,22 @@ class SetupManager {
   constructor() {}
 
   async setup(originalMessage) {
-    var configuration = {
-      guild: originalMessage.guild.id,
-      helpChannel: "",
-      helpChannelEmbedText: "",
-      reactionEmoticon: "",
-      ticketsChannelCategory: "",
-      helpChannelMessage: "",
-      helpChannelEmbedTitle: "",
-      supportLogChannel: ""
-    };
+    
+    var configuration = null;
+    
+    configuration = await GuildConfigurationRepository.get(originalMessage.guild.id);
+    
+    if (configuration == null) 
+    {
+      configuration = {
+        guild: originalMessage.guild.id,
+        helpChannel: "",
+        helpChannelEmbedText: "",
+        ticketsChannelCategory: "",
+        helpChannelEmbedTitle: "",
+        supportLogChannel: ""
+      };
+    }
 
     const collector = new Discord.MessageCollector(
       originalMessage.channel,

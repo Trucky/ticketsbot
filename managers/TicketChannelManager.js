@@ -5,7 +5,7 @@ const GuildConfigurationRepository = require("../database/repositories/GuildConf
 class TicketChannelManager {
   constructor() {}
 
-  async openTicket(user, guild) {
+  async openTicket(user, guild, selectedTopic) {
     var configuration = await GuildConfigurationRepository.get(guild.id);
 
     var allTicketsCount = await TicketRepository.countAll(guild.id);
@@ -43,7 +43,7 @@ class TicketChannelManager {
       });
     });
 
-    configuration.rolesPermissions.forEach((m) => {
+    configuration.rolesPermissions.filter(m => m.topicEmojii == selectedTopic.reactionEmoji).forEach((m) => {
       permissionOverwrites.push({
         id: m.id,
         allow: [
@@ -57,7 +57,7 @@ class TicketChannelManager {
       });
     });
 
-    var channel = await guild.channels.create("#ticket-" + nextTicket, {
+    var channel = await guild.channels.create("#ticket-" + nextTicket + '-' + user.username, {
       type: "text",
       topic: "Ticket #" + nextTicket + " created by " + user.name,
       parent: configuration.ticketsChannelCategory,
@@ -65,12 +65,14 @@ class TicketChannelManager {
     });
 
     var initialEmbed = new Discord.MessageEmbed({
-      title: "Welcome to the Trucky Help channel!",
+      title: "Welcome to the " + guild.name + " Help channel!",
       description:
         "You have opened a new ticket.\nA member of our team will be in touch shortly.",
     });
 
     initialEmbed.fields.push({ name: "Opened by", value: `<@${user.id}>` });
+
+    initialEmbed.fields.push({ name: "Topic", value: `${selectedTopic.reactionEmoji} ${selectedTopic.topicName}` });
 
     initialEmbed.fields.push({
       name: "Knowledge Base",

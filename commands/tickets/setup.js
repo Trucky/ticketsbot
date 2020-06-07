@@ -15,7 +15,7 @@ module.exports = class SetupCommand extends commando.Command {
     });
   }
 
-  async run(msg, args) {
+  async run(msg) {
     var setupManager = new SetupManager();
     setupManager.setup(msg);
   }

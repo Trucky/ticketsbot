@@ -33,11 +33,16 @@ module.exports = class SetupCommand extends commando.Command {
           prompt: "Which user?",
           type: "user",
         },
+        {
+          key: "topicEmojii",
+          prompt: "Which topic emojii this user must reply to?",
+          type: "string",
+        },
       ],
     });
   }
 
-  async run(msg, { type, action, user }) {
+  async run(msg, { type, action, user, topicEmojii }) {
     if (
       msg.member.hasPermission("ADMINISTRATOR") ||
       msg.member.hasPermission("MANAGE_GUILD") ||
@@ -52,7 +57,8 @@ module.exports = class SetupCommand extends commando.Command {
           await GuildConfigurationRepository.addUserPemission(
             msg.guild.id,
             type,
-            user.id
+            user.id,
+            topicEmojii
           );
 
           msg.react("✅");

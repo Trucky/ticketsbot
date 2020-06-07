@@ -2,9 +2,11 @@ var model = require("../models/GuildConfiguration");
 
 class GuildConfigurationRepository {
   static async createOrUpdate(data) {
-    return model
-      .updateOne({ guild: data.guild }, data, { upsert: true })
-      .exec();
+
+    if (data._id)
+      return model.findByIdAndUpdate(data._id, data);
+    else
+      return model.create(data);        
   }
 
   static async updateHelpChannelMessage(configuration, id) {
@@ -24,20 +26,24 @@ class GuildConfigurationRepository {
     return model.findOne({ guild: guild }).exec();
   }
 
-  static async addRolePermission(guild, type, id) {
+  static async addRolePermission(guild, type, id, topicEmojii) {
     return model
       .updateOne(
         { guild: guild },
-        { $push: { rolesPermissions: { role: type, id: id } } }
+        {
+          $push: {
+            rolesPermissions: { role: type, id: id, topicEmojii: topicEmojii },
+          },
+        }
       )
       .exec();
   }
 
-  static async addUserPemission(guild, type, id) {
+  static async addUserPemission(guild, type, id, topicEmojii) {
     return model
       .updateOne(
         { guild: guild },
-        { $push: { usersPermissions: { role: type, id: id } } }
+        { $push: { usersPermissions: { role: type, id: id, topicEmojii: topicEmojii } } }
       )
       .exec();
   }
@@ -64,14 +70,23 @@ class GuildConfigurationRepository {
         hasRole = true;
 
       if (!hasRole) {
-        configuration.rolesPermissions.forEach(m => {
-            if (m.role == role && message.member.roles.cache.has(m.id))
-                hasRole = true;
+        configuration.rolesPermissions.forEach((m) => {
+          if (m.role == role && message.member.roles.cache.has(m.id))
+            hasRole = true;
         });
       }
     }
 
     return hasRole;
+  }
+
+  static async addTopic(guild, emojii, topic) {
+    return model
+      .updateOne(
+        { guild: guild },
+        { $push: { topics: { reactionEmoji: emojii, topicName: topic } } }
+      )
+      .exec();
   }
 }
 

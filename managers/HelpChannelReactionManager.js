@@ -14,7 +14,15 @@ class HelpChannelReactionManager {
       var channel = guild.channels.resolve(c.helpChannel);
 
       if (channel) {
-        message = await channel.messages.fetch(c.helpChannelMessage, true);
+
+        try
+        {
+          message = await channel.messages.fetch(c.helpChannelMessage, true);
+        }
+        catch (ex)
+        {
+          console.error(ex);
+        }
       }
     }
 
@@ -26,7 +34,10 @@ class HelpChannelReactionManager {
 
     guildConfigurations.forEach(async (c) => {
       var message = await this.fetchHelpChannelMessage(client, c);
-      if (message) this.waitForReactions(c, message);
+      if (message != null) 
+      {
+        this.waitForReactions(c, message);
+      }
     });
   }
 
@@ -38,7 +49,7 @@ class HelpChannelReactionManager {
     );
     reactionCollector.on("collect", async (r) => {
       r.users.cache.array().forEach(async (u) => {
-        if (u.id != r.client.user.id) {
+        if (!u.bot && u.id != r.client.user.id) {
           
           console.log(r.emoji.name);
 
@@ -70,7 +81,14 @@ class HelpChannelReactionManager {
     var m = null;
 
     if (configuration.helpChannelMessage) {
-      m = await helpChannel.messages.fetch(configuration.helpChannelMessage);
+      try
+      {
+        m = await helpChannel.messages.fetch(configuration.helpChannelMessage);
+      }
+      catch (ex)
+      {
+        console.error(ex);
+      }
     }
 
     var embed = new Discord.MessageEmbed({

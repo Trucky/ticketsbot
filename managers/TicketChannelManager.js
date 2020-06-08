@@ -13,6 +13,10 @@ class TicketChannelManager {
 
     const everyone = guild.roles.cache.find((r) => r.name == "@everyone");
 
+    var mentions = [
+      `<@${user.id}>`
+    ];
+
     var permissionOverwrites = [
       {
         id: user.id,
@@ -30,6 +34,9 @@ class TicketChannelManager {
     ];
 
     configuration.usersPermissions.forEach((m) => {
+
+      mentions.push(`<@${m.id}>`);
+
       permissionOverwrites.push({
         id: m.id,
         allow: [
@@ -44,6 +51,9 @@ class TicketChannelManager {
     });
 
     configuration.rolesPermissions.filter(m => m.topicEmojii == selectedTopic.reactionEmoji).forEach((m) => {
+      
+      mentions.push(`<@&${m.id}>`);
+
       permissionOverwrites.push({
         id: m.id,
         allow: [
@@ -59,7 +69,7 @@ class TicketChannelManager {
 
     var channel = await guild.channels.create("#ticket-" + nextTicket + '-' + user.username, {
       type: "text",
-      topic: "Ticket #" + nextTicket + " created by " + user.name,
+      topic: `Ticket #${nextTicket} created by ${user.username} - Topic: ${selectedTopic.topicName}`,
       parent: configuration.ticketsChannelCategory,
       permissionOverwrites: permissionOverwrites,
     });
@@ -107,7 +117,7 @@ class TicketChannelManager {
 
     await this.sendOpeningTicketSupportLog(initialMessage.guild, ticket);
 
-    var everyOneMessage = await channel.send("@everyone");
+    var everyOneMessage = await channel.send(mentions.join(' '));
 
     await everyOneMessage.delete();
 
@@ -204,10 +214,17 @@ class TicketChannelManager {
         if (channel) {
           this.waitForMessages(channel);
 
-          var message = await channel.messages.fetch(c.bannerMessage, true);
+          try
+          {
+            var message = await channel.messages.fetch(c.bannerMessage, true);
 
-          if (message && message.constructor.name != "Collection") {
-            this.waitForReactions(message);
+            if (message && message.constructor.name != "Collection") {
+              this.waitForReactions(message);
+            }
+          }
+          catch (ex)
+          {
+            console.error(ex);
           }
         }
       }

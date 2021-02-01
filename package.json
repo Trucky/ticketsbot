@@ -12,6 +12,7 @@
   "dependencies": {
     "discord.js": "^12.2.0",
     "discord.js-commando": "github:discordjs/Commando",
+    "discordjs-logger": "^2.0.0",
     "dotenv": "^8.2.0",
     "moment": "^2.25.3",
     "mongoose": "^5.9.13",

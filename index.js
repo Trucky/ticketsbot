@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const sqlite3 = require("sqlite3");
 var HelpChannelReactionManager = require("./managers/HelpChannelReactionManager");
 var TicketChannelManager = require("./managers/TicketChannelManager");
+const logger = require("discordjs-logger");
 
 if (argv.dev) require("dotenv").config();
 
@@ -20,6 +21,10 @@ mongoose
       commandPrefix: "t?",
       disableEveryone: false
     });
+
+    if (argv.dev) {
+      logger.all(client);
+    }
 
     client.registry
       // Registers your custom command groups

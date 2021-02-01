@@ -29,7 +29,7 @@ class TicketRepository {
       )
       .exec();
 
-      return await model.findOne({ guild: guild, channel: channel }).exec();
+    return await model.findOne({ guild: guild, channel: channel }).exec();
   }
 
   static async getByChannel(guild, channel) {
@@ -52,6 +52,10 @@ class TicketRepository {
         }
       )
       .exec();
+  }
+
+  static async getOpenTicketByUser(guild, user) {
+    return model.findOne({ guild: guild, author: user, status: true });
   }
 }
 

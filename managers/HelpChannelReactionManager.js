@@ -45,40 +45,40 @@ class HelpChannelReactionManager {
       filter
     );
     reactionCollector.on("collect", (r) => {
-      r.users.cache.array().forEach((u) => {
-        if (!u.bot && u.id != r.client.user.id) {
-
-          console.log(r.emoji.name);
-
-          this.manageReaction(r, u);
-        }
-      });
+      this.manageReaction(r);
     });
   }
 
-  async manageReaction(reaction, user) {
-    // reload current guild configuration
-    var configuration = await GuildConfigurationRepository.get(
-      reaction.message.guild.id
-    );
+  async manageReaction(reaction) {
 
-    // check if user has already a ticket open in this guild
-    const ticketOpenBySameUser = await TicketRepository.getOpenTicketByUser(reaction.message.guild.id, user.id);
+    var users = (await reaction.users.fetch()).array().filter(m => m.id != reaction.client.user.id);
 
-    if (ticketOpenBySameUser == null) {
-      //await this.resetReactions(configuration, helpChannelReactionMessage);
+    for (var i = 0; i < users.length; i++) {
+      var user = users[i];
 
-      var selectedTopic = configuration.topics.find(
-        (m) => m.reactionEmoji == reaction.emoji.name
+      await reaction.users.remove(user);
+
+      // reload current guild configuration
+      var configuration = await GuildConfigurationRepository.get(
+        reaction.message.guild.id
       );
 
-      if (selectedTopic) {
-        var ticketChannelManager = new TicketChannelManager();
-        ticketChannelManager.openTicket(user, reaction.message.guild, selectedTopic);
+      // check if user has already a ticket open in this guild
+      const ticketOpenBySameUser = await TicketRepository.getOpenTicketByUser(reaction.message.guild.id, user.id);
+
+      if (ticketOpenBySameUser == null) {
+        //await this.resetReactions(configuration, helpChannelReactionMessage);
+
+        var selectedTopic = configuration.topics.find(
+          (m) => m.reactionEmoji == reaction.emoji.name
+        );
+
+        if (selectedTopic) {
+          var ticketChannelManager = new TicketChannelManager();
+          ticketChannelManager.openTicket(user, reaction.message.guild, selectedTopic);
+        }
       }
     }
-
-    reaction.users.remove(user);
   }
 
   async createHelpChannelMessage(configuration, message) {

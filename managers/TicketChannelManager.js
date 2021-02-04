@@ -133,7 +133,7 @@ class TicketChannelManager {
     reactionCollector.on("collect", async (r) => {
       r.users.cache.array().forEach(async (u) => {
         if (u.id != r.client.user.id) {
-          console.log(r);
+          //console.log(r);
 
           if (r.emoji.name == "🔒") {
             reactionCollector.stop();

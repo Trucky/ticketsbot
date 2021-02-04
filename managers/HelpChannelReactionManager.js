@@ -45,39 +45,55 @@ class HelpChannelReactionManager {
       filter
     );
     reactionCollector.on("collect", (r) => {
+      console.log(`Received reaction ${r.emoji.name} in ${r.message.guild.name} - #${r.message.channel.name}`);
       this.manageReaction(r);
     });
   }
 
   async manageReaction(reaction) {
 
-    var users = (await reaction.users.fetch()).array().filter(m => m.id != reaction.client.user.id);
+    try {
+      var users = (await reaction.users.fetch()).array().filter(m => m.id != reaction.client.user.id);
 
-    for (var i = 0; i < users.length; i++) {
-      var user = users[i];
+      console.log(`${reaction.message.guild.name} - #${reaction.message.channel.name} - Current users reacting ${users.length}: ${users.map(m => m.username + '#' + m.discriminator).join(', ')}`);
 
-      await reaction.users.remove(user);
+      for (var i = 0; i < users.length; i++) {
+        var user = users[i];
 
-      // reload current guild configuration
-      var configuration = await GuildConfigurationRepository.get(
-        reaction.message.guild.id
-      );
+        console.log(`${reaction.message.guild.name} - #${reaction.message.channel.name} - Managing reaction from ${user.username}#${user.discriminator}`);
 
-      // check if user has already a ticket open in this guild
-      const ticketOpenBySameUser = await TicketRepository.getOpenTicketByUser(reaction.message.guild.id, user.id);
+        await reaction.users.remove(user);
 
-      if (ticketOpenBySameUser == null) {
-        //await this.resetReactions(configuration, helpChannelReactionMessage);
+        console.log(`${reaction.message.guild.name} - #${reaction.message.channel.name} - Reaction ${reaction.emoji.name} removed for ${user.username}#${user.discriminator}`);
 
-        var selectedTopic = configuration.topics.find(
-          (m) => m.reactionEmoji == reaction.emoji.name
+        // reload current guild configuration
+        var configuration = await GuildConfigurationRepository.get(
+          reaction.message.guild.id
         );
 
-        if (selectedTopic) {
-          var ticketChannelManager = new TicketChannelManager();
-          ticketChannelManager.openTicket(user, reaction.message.guild, selectedTopic);
+        // check if user has already a ticket open in this guild
+        const ticketOpenBySameUser = await TicketRepository.getOpenTicketByUser(reaction.message.guild.id, user.id);
+
+        if (ticketOpenBySameUser == null) {
+          //await this.resetReactions(configuration, helpChannelReactionMessage);
+
+          var selectedTopic = configuration.topics.find(
+            (m) => m.reactionEmoji == reaction.emoji.name
+          );
+
+          if (selectedTopic) {
+            var ticketChannelManager = new TicketChannelManager();
+            console.log(`${reaction.message.guild.name} - #${reaction.message.channel.name} - Opening ticket`);
+            ticketChannelManager.openTicket(user, reaction.message.guild, selectedTopic);
+          }
         }
+        else
+          console.log(`${reaction.message.guild.name} - #${reaction.message.channel.name} - User have already a ticket open`);
       }
+    }
+    catch (ex) {
+      console.error(`${reaction.message.guild.name} - #${reaction.message.channel.name}`);
+      console.error(ex);
     }
   }
 

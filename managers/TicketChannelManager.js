@@ -67,7 +67,7 @@ class TicketChannelManager {
       });
     });
 
-    var channel = await guild.channels.create("#ticket-" + nextTicket + '-' + user.username, {
+    var channel = await guild.channels.create("#ticket-" + nextTicket, {
       type: "text",
       topic: `Ticket #${nextTicket} created by ${user.username} - Topic: ${selectedTopic.topicName}`,
       parent: configuration.ticketsChannelCategory,

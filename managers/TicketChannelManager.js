@@ -3,7 +3,7 @@ const TicketRepository = require("../database/repositories/TicketRepository");
 const GuildConfigurationRepository = require("../database/repositories/GuildConfigurationRepository");
 
 class TicketChannelManager {
-  constructor() {}
+  constructor() { }
 
   async openTicket(user, guild, selectedTopic) {
     var configuration = await GuildConfigurationRepository.get(guild.id);
@@ -51,7 +51,7 @@ class TicketChannelManager {
     });
 
     configuration.rolesPermissions.filter(m => m.topicEmojii == selectedTopic.reactionEmoji).forEach((m) => {
-      
+
       mentions.push(`<@&${m.id}>`);
 
       permissionOverwrites.push({
@@ -165,9 +165,9 @@ class TicketChannelManager {
 
         await dmChannel.send(
           "Ticket #" +
-            ticket.number.toString() +
-            " has been closed. Thank you for contacting " +
-            message.guild.name
+          ticket.number.toString() +
+          " has been closed. Thank you for contacting " +
+          message.guild.name
         );
       } catch (ex) {
         console.error(ex);
@@ -214,16 +214,14 @@ class TicketChannelManager {
         if (channel) {
           this.waitForMessages(channel);
 
-          try
-          {
+          try {
             var message = await channel.messages.fetch(c.bannerMessage, true);
 
             if (message && message.constructor.name != "Collection") {
               this.waitForReactions(message);
             }
           }
-          catch (ex)
-          {
+          catch (ex) {
             console.error(ex);
           }
         }

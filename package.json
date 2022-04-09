@@ -14,7 +14,7 @@
     "discord.js-commando": "^0.12.3",
     "discordjs-logger": "^2.0.0",
     "dotenv": "^10.0.0",
-    "moment": "^2.29.1",
+    "moment": "^2.29.2",
     "mongoose": "^6.1.1",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2",
